@@ -1,0 +1,21 @@
+Package: covLW
+Type: Package
+Title: Ledoit-Wolf Covariance Matrix Estimators
+Version: 0.1.0
+Author: Shiying Xiao [aut, cre]
+Authors@R: c(
+    person(given = "Shiying", family = "Xiao",
+           email = "shiying.xiao@outlook.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8846-3258"))
+  )
+Maintainer: Shiying Xiao <shiying.xiao@outlook.com>
+Description: Estimates covariance matrices by Ledoit-Wolf linear shrinkage
+    toward a scaled identity matrix.
+License: GPL (>= 3)
+URL: https://github.com/Carol-seven/covLW, https://shiying-xiao.com/covLW/
+BugReports: https://github.com/Carol-seven/covLW/issues
+Encoding: UTF-8
+Imports: Rdpack
+RdMacros: Rdpack
+Config/roxygen2/version: 8.1.0

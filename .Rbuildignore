@@ -1,0 +1,5 @@
+^.*\.Rproj$
+^LICENSE\.md$
+^\.Rproj\.user$
+^docs$
+^pkgdown$

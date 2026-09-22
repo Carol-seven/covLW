@@ -1,0 +1,10 @@
+*.Rproj
+*.o
+*.so
+.DS_Store
+.RData
+.Rhistory
+.Rproj.user
+.Ruserdata
+.httr-oauth
+inst/doc

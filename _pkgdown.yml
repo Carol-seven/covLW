@@ -1,30 +1,30 @@
 home:
   title: covLW
   description: Ledoit-Wolf Covariance Matrix Estimators
-
-url: https://shiying-xiao.com/covLW
-
+url: http://shiying-xiao.com/covLW/
 template:
   bootstrap: 5
-  light-switch: true
+  light-switch: yes
   math-rendering: mathjax
-
 authors:
   Shiying Xiao:
     href: http://shiying-xiao.com
-
 development:
   mode: auto
-
 figures:
   dpi: 300
-
 navbar:
   structure:
-    left: [intro, reference]
-    right: [search, github, lightswitch]
+    left:
+    - intro
+    - reference
+    right:
+    - search
+    - github
+    - lightswitch
   components:
     reference:
       text: Functions
       icon: fa-solid fa-file-code
       href: reference/index.html
+

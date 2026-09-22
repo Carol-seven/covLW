@@ -7,4 +7,5 @@
 .Rproj.user
 .Ruserdata
 .httr-oauth
+docs
 inst/doc

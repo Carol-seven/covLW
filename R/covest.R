@@ -70,7 +70,10 @@ covest <- function(X, k = -1) {
     stop("`X` must be a numeric matrix.", call. = FALSE)
   }
 
-  if (nrow(X) < 2L || ncol(X) < 1L) {
+  N <- nrow(X)
+  p <- ncol(X)
+
+  if (N < 2L || p < 1L) {
     stop("`X` must have at least two rows and one column.", call. = FALSE)
   }
 
@@ -82,9 +85,6 @@ covest <- function(X, k = -1) {
     stop("`k` must be a finite numeric scalar.", call. = FALSE)
   }
 
-  N <- nrow(X)
-  p <- ncol(X)
-
   if (k < 0) {
     X <- scale(X, center = TRUE, scale = FALSE)
     k <- 1L
@@ -95,22 +95,19 @@ covest <- function(X, k = -1) {
   n <- N - k
 
   S <- crossprod(X) / n
-
   m <- sum(diag(S)) / p
   target <- m * diag(p)
 
   d2 <- sum((S - target)^2) / p
 
-  b2_overline <- (sum(rowSums(X^2)^2) - n * sum(S^2)) / (p * n^2)
-  b2 <- min(max(b2_overline, 0), d2)
-
-  a2 <- d2 - b2
-
   if (d2 == 0) {
-    Sstar <- target
-  } else {
-    Sstar <- (b2 / d2) * target + (a2 / d2) * S
+    return(target)
   }
 
-  return(Sstar)
+  b2_overline <- (sum(rowSums(X^2)^2) - n * sum(S^2)) / (p * n^2)
+  b2 <- min(max(b2_overline, 0), d2)
+  a2 <- d2 - b2
+
+  result <- (b2 / d2) * target + (a2 / d2) * S
+  return(result)
 }

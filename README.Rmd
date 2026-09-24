@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 ```
 
 
-# covLW
+# covLW <img src="man/figures/logo.png" align="right" alt="" width="150">
 
 
 ## Ledoit-Wolf Covariance Matrix Estimators

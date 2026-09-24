@@ -76,7 +76,6 @@ Sigma_hat_centered <- covest(X_centered, k = 1)
 
 # Population mean is assumed to be known and equal to zero
 Sigma_hat_zeromean <- covest(X, k = 0)
-
 }
 \references{
 \insertAllCited{}

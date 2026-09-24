@@ -2,5 +2,5 @@
 
 ## All functions
 
-- [`covest()`](http://shiying-xiao.com/covLW/reference/covest.md) :
+- [`covLW()`](http://shiying-xiao.com/covLW/reference/covLW.md) :
   Ledoit-Wolf Linear Shrinkage Covariance Estimator

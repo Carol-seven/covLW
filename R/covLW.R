@@ -58,13 +58,13 @@
 #' \insertAllCited{}
 #'
 #' @example
-#' inst/example/ex-covest.R
+#' inst/example/ex-covLW.R
 #'
 #' @importFrom Rdpack reprompt
 #'
 #' @export
 
-covest <- function(X, k = -1) {
+covLW <- function(X, k = -1) {
 
   if (!is.matrix(X) || !is.numeric(X)) {
     stop("`X` must be a numeric matrix.", call. = FALSE)

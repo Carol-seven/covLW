@@ -1,14 +1,15 @@
-#' Ledoit-Wolf Linear Shrinkage Covariance Estimator
+#' Ledoit-Wolf Covariance Matrix Estimation
 #'
-#' Estimates a covariance matrix by shrinking the sample covariance matrix
-#' toward a scaled identity matrix \insertCite{ledoit2004well}{covLW}.
+#' Estimates a covariance matrix using a selected Ledoit-Wolf linear or
+#' nonlinear shrinkage method.
 #'
 #' @param X A numeric matrix containing the data.
 #' Rows represent observations and columns represent variables.
 #' \code{X} must contain at least two rows and one column, and all entries
 #' must be finite.
 #'
-#' @param k A numeric scalar controlling centering and the effective sample size.
+#' @param k A numeric scalar (default = -1) controlling centering and
+#' the effective sample size.
 #' \itemize{
 #' \item \code{k < 0}: The columns of \code{X} are centered internally,
 #' \code{k} is set to 1, and the effective sample size is \code{nrow(X) - 1}.
@@ -21,38 +22,17 @@
 #' }
 #' Nonnegative values of \code{k} must be integers smaller than \code{nrow(X)}.
 #'
-#' @return A symmetric numeric \eqn{p \times p} matrix containing
-#' the Ledoit-Wolf linear shrinkage estimate of the covariance matrix.
+#' @param method A character string (default = "linear") specifying the method
+#' for covariance matrix estimation:
+#' \enumerate{
+#' \item \code{"linear"}: Linear shrinkage toward a scaled identity matrix
+#' \insertCite{ledoit2004well}{covLW}.
+#' \item \code{"lis"}: Linear-inverse shrinkage, nonlinear shrinkage derived
+#' under Stein's loss \insertCite{ledoit2022quadratic}{covLW}.
+#' }
 #'
-#' @details
-#' Let \eqn{N} be the number of rows of \code{X}, \eqn{p} its number of columns,
-#' and \eqn{n = N - k} the effective sample size after the treatment of \code{k}.
-#' The sample covariance matrix is \eqn{S = X^\top X / n}.
-#' The shrinkage target is the scaled identity matrix \eqn{\widehat{m} I_p},
-#' where \eqn{\widehat{m} = \operatorname{tr}(S) / p} is the average sample variance.
-#'
-#' Using the normalized squared Frobenius norm, the estimated squared distance
-#' between the sample covariance matrix and the target is
-#' \deqn{\widehat{d}^2 = \frac{1}{p} \lVert S - \widehat{m}I_p \rVert_F^2.}
-#'
-#' The estimator of the sampling error is
-#' \deqn{\overline{b}^2 = \frac{\sum_{i=1}^{N} \lVert x_i x_i^\top \rVert_F^2
-#' - n \lVert S \rVert_F^2}{p n^2},}
-#' where \eqn{x_i^\top} is row \eqn{i} of \code{X}. It is truncated to
-#' \eqn{\widehat{b}^2 = \min\{\max(\overline{b}^2, 0),\widehat{d}^2\}},
-#' and \eqn{\widehat{a}^2 = \widehat{d}^2 - \widehat{b}^2}.
-#'
-#' The resulting covariance estimator is
-#' \deqn{\widehat{S}^{\ast} = \frac{\widehat{b}^2}{\widehat{d}^2}\widehat{m}I_p
-#' + \frac{\widehat{a}^2}{\widehat{d}^2}S.}
-#'
-#' If \eqn{\widehat{d}^2 = 0}, the function returns the target matrix directly.
-#'
-#' In the formulas above, \eqn{X} denotes the matrix after any centering
-#' performed by the function.
-#'
-#' The function does not perform class-specific centering when \code{k >= 1}.
-#' Such centering must be completed before calling the function.
+#' @return A symmetric numeric matrix containing the selected Ledoit-Wolf
+#' covariance matrix estimate.
 #'
 #' @references
 #' \insertAllCited{}
@@ -64,7 +44,10 @@
 #'
 #' @export
 
-covLW <- function(X, k = -1) {
+covLW <- function(X, k = -1, method = "linear") {
+
+  methods <- c("linear", "lis")
+  method <- match.arg(method, choices = methods)
 
   if (!is.matrix(X) || !is.numeric(X)) {
     stop("`X` must be a numeric matrix.", call. = FALSE)
@@ -93,21 +76,58 @@ covLW <- function(X, k = -1) {
   }
 
   n <- N - k
-
   S <- crossprod(X) / n
-  m <- sum(diag(S)) / p
-  target <- m * diag(p)
 
-  d2 <- sum((S - target)^2) / p
+  if (method == "linear") {
 
-  if (d2 == 0) {
-    return(target)
+    m <- sum(diag(S)) / p
+    target <- m * diag(p)
+
+    d2 <- sum((S - target)^2) / p
+
+    if (d2 == 0) {
+      dimnames(target) <- dimnames(S)
+      return(target)
+    }
+
+    b2_overline <- (sum(rowSums(X^2)^2) - n * sum(S^2)) / (p * n^2)
+    b2 <- min(max(b2_overline, 0), d2)
+    a2 <- d2 - b2
+
+    result <- (b2 / d2) * target + (a2 / d2) * S
+
+  } else if (method == "lis") {
+
+    r <- p / n
+
+    if (r > 1) {
+      stop("This estimator requires concentration ratio <= 1.", call. = FALSE)
+    }
+
+    eig <- eigen(S, symmetric = TRUE)
+    lambda <- eig$values
+    U <- eig$vectors
+
+    tolerance <- max(lambda) * max(n, p) * .Machine$double.eps
+    if (min(lambda) <= tolerance) {
+      stop(paste0(
+        "The sample covariance matrix is singular or numerically singular.\n",
+        "Check for constant, duplicate, or linearly dependent columns."),
+        call. = FALSE)
+    }
+
+    h <- min(r^2, 1 / r^2)^0.35 / p^0.35
+
+    theta <- rowMeans(outer(lambda, lambda, function(li, lj) {
+      li * (li - lj) / ((li - lj)^2 + (h * li)^2)
+    }))
+
+    d <- pmax((1 - r) / lambda + 2 * r / lambda * theta,
+              min(1 / lambda))
+
+    result <- tcrossprod(sweep(U, 2L, sqrt(1 / d), `*`))
   }
 
-  b2_overline <- (sum(rowSums(X^2)^2) - n * sum(S^2)) / (p * n^2)
-  b2 <- min(max(b2_overline, 0), d2)
-  a2 <- d2 - b2
-
-  result <- (b2 / d2) * target + (a2 / d2) * S
+  dimnames(result) <- dimnames(S)
   return(result)
 }

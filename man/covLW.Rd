@@ -2,9 +2,9 @@
 % Please edit documentation in R/covLW.R
 \name{covLW}
 \alias{covLW}
-\title{Ledoit-Wolf Linear Shrinkage Covariance Estimator}
+\title{Ledoit-Wolf Covariance Matrix Estimation}
 \usage{
-covLW(X, k = -1)
+covLW(X, k = -1, method = "linear")
 }
 \arguments{
 \item{X}{A numeric matrix containing the data.
@@ -12,7 +12,8 @@ Rows represent observations and columns represent variables.
 \code{X} must contain at least two rows and one column, and all entries
 must be finite.}
 
-\item{k}{A numeric scalar controlling centering and the effective sample size.
+\item{k}{A numeric scalar (default = -1) controlling centering and
+the effective sample size.
 \itemize{
 \item \code{k < 0}: The columns of \code{X} are centered internally,
 \code{k} is set to 1, and the effective sample size is \code{nrow(X) - 1}.
@@ -24,58 +25,40 @@ have already been centered separately, and the effective sample size is
 \code{nrow(X) - k}.
 }
 Nonnegative values of \code{k} must be integers smaller than \code{nrow(X)}.}
+
+\item{method}{A character string (default = "linear") specifying the method
+for covariance matrix estimation:
+\enumerate{
+\item \code{"linear"}: Linear shrinkage toward a scaled identity matrix
+\insertCite{ledoit2004well}{covLW}.
+\item \code{"lis"}: Linear-inverse shrinkage, nonlinear shrinkage derived
+under Stein's loss \insertCite{ledoit2022quadratic}{covLW}.
+}}
 }
 \value{
-A symmetric numeric \eqn{p \times p} matrix containing
-the Ledoit-Wolf linear shrinkage estimate of the covariance matrix.
+A symmetric numeric matrix containing the selected Ledoit-Wolf
+covariance matrix estimate.
 }
 \description{
-Estimates a covariance matrix by shrinking the sample covariance matrix
-toward a scaled identity matrix \insertCite{ledoit2004well}{covLW}.
-}
-\details{
-Let \eqn{N} be the number of rows of \code{X}, \eqn{p} its number of columns,
-and \eqn{n = N - k} the effective sample size after the treatment of \code{k}.
-The sample covariance matrix is \eqn{S = X^\top X / n}.
-The shrinkage target is the scaled identity matrix \eqn{\widehat{m} I_p},
-where \eqn{\widehat{m} = \operatorname{tr}(S) / p} is the average sample variance.
-
-Using the normalized squared Frobenius norm, the estimated squared distance
-between the sample covariance matrix and the target is
-\deqn{\widehat{d}^2 = \frac{1}{p} \lVert S - \widehat{m}I_p \rVert_F^2.}
-
-The estimator of the sampling error is
-\deqn{\overline{b}^2 = \frac{\sum_{i=1}^{N} \lVert x_i x_i^\top \rVert_F^2
-- n \lVert S \rVert_F^2}{p n^2},}
-where \eqn{x_i^\top} is row \eqn{i} of \code{X}. It is truncated to
-\eqn{\widehat{b}^2 = \min\{\max(\overline{b}^2, 0),\widehat{d}^2\}},
-and \eqn{\widehat{a}^2 = \widehat{d}^2 - \widehat{b}^2}.
-
-The resulting covariance estimator is
-\deqn{\widehat{S}^{\ast} = \frac{\widehat{b}^2}{\widehat{d}^2}\widehat{m}I_p
-+ \frac{\widehat{a}^2}{\widehat{d}^2}S.}
-
-If \eqn{\widehat{d}^2 = 0}, the function returns the target matrix directly.
-
-In the formulas above, \eqn{X} denotes the matrix after any centering
-performed by the function.
-
-The function does not perform class-specific centering when \code{k >= 1}.
-Such centering must be completed before calling the function.
+Estimates a covariance matrix using a selected Ledoit-Wolf linear or
+nonlinear shrinkage method.
 }
 \examples{
 set.seed(123)
 X <- matrix(rnorm(100), nrow = 20, ncol = 5)
 
-# Center X internally and use an effective sample size of N - 1
-Sigma_hat <- covLW(X)
+## Linear shrinkage; center X internally and use an effective sample size of N - 1
+Sigma_linear <- covLW(X)
 
-# X has already been centered as one class
+# Linear shrinkage; population mean is assumed to be known and equal to zero
+Sigma_linear_zeromean <- covLW(X, k = 0, method = "linear")
+
+## Linear-inverse shrinkage; internal centering
+Sigma_lis <- covLW(X, method = "lis")
+
+# Linear-inverse shrinkage; X has already been centered as one class
 X_centered <- scale(X, center = TRUE, scale = FALSE)
-Sigma_hat_centered <- covLW(X_centered, k = 1)
-
-# Population mean is assumed to be known and equal to zero
-Sigma_hat_zeromean <- covLW(X, k = 0)
+Sigma_lis_centered <- covLW(X_centered, k = 1, method = "lis")
 }
 \references{
 \insertAllCited{}

@@ -3,4 +3,4 @@
 ## All functions
 
 - [`covLW()`](http://shiying-xiao.com/covLW/reference/covLW.md) :
-  Ledoit-Wolf Linear Shrinkage Covariance Estimator
+  Ledoit-Wolf Covariance Matrix Estimation

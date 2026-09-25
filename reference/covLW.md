@@ -1,12 +1,12 @@
-# Ledoit-Wolf Linear Shrinkage Covariance Estimator
+# Ledoit-Wolf Covariance Matrix Estimation
 
-Estimates a covariance matrix by shrinking the sample covariance matrix
-toward a scaled identity matrix (Ledoit and Wolf 2004) .
+Estimates a covariance matrix using a selected Ledoit-Wolf linear or
+nonlinear shrinkage method.
 
 ## Usage
 
 ``` r
-covLW(X, k = -1)
+covLW(X, k = -1, method = "linear")
 ```
 
 ## Arguments
@@ -19,7 +19,8 @@ covLW(X, k = -1)
 
 - k:
 
-  A numeric scalar controlling centering and the effective sample size.
+  A numeric scalar (default = -1) controlling centering and the
+  effective sample size.
 
   - `k < 0`: The columns of `X` are centered internally, `k` is set to
     1, and the effective sample size is `nrow(X) - 1`.
@@ -34,43 +35,21 @@ covLW(X, k = -1)
 
   Nonnegative values of `k` must be integers smaller than `nrow(X)`.
 
+- method:
+
+  A character string (default = "linear") specifying the method for
+  covariance matrix estimation:
+
+  1.  `"linear"`: Linear shrinkage toward a scaled identity matrix
+      (Ledoit and Wolf 2004) .
+
+  2.  `"lis"`: Linear-inverse shrinkage, nonlinear shrinkage derived
+      under Stein's loss (Ledoit and Wolf 2022) .
+
 ## Value
 
-A symmetric numeric \\p \times p\\ matrix containing the Ledoit-Wolf
-linear shrinkage estimate of the covariance matrix.
-
-## Details
-
-Let \\N\\ be the number of rows of `X`, \\p\\ its number of columns, and
-\\n = N - k\\ the effective sample size after the treatment of `k`. The
-sample covariance matrix is \\S = X^\top X / n\\. The shrinkage target
-is the scaled identity matrix \\\widehat{m} I_p\\, where \\\widehat{m} =
-\operatorname{tr}(S) / p\\ is the average sample variance.
-
-Using the normalized squared Frobenius norm, the estimated squared
-distance between the sample covariance matrix and the target is
-\$\$\widehat{d}^2 = \frac{1}{p} \lVert S - \widehat{m}I_p
-\rVert_F^2.\$\$
-
-The estimator of the sampling error is \$\$\overline{b}^2 =
-\frac{\sum\_{i=1}^{N} \lVert x_i x_i^\top \rVert_F^2 - n \lVert S
-\rVert_F^2}{p n^2},\$\$ where \\x_i^\top\\ is row \\i\\ of `X`. It is
-truncated to \\\widehat{b}^2 = \min\\\max(\overline{b}^2,
-0),\widehat{d}^2\\\\, and \\\widehat{a}^2 = \widehat{d}^2 -
-\widehat{b}^2\\.
-
-The resulting covariance estimator is \$\$\widehat{S}^{\ast} =
-\frac{\widehat{b}^2}{\widehat{d}^2}\widehat{m}I_p +
-\frac{\widehat{a}^2}{\widehat{d}^2}S.\$\$
-
-If \\\widehat{d}^2 = 0\\, the function returns the target matrix
-directly.
-
-In the formulas above, \\X\\ denotes the matrix after any centering
-performed by the function.
-
-The function does not perform class-specific centering when `k >= 1`.
-Such centering must be completed before calling the function.
+A symmetric numeric matrix containing the selected Ledoit-Wolf
+covariance matrix estimate.
 
 ## References
 
@@ -78,7 +57,11 @@ Ledoit O, Wolf M (2004). “A Well-Conditioned Estimator for
 Large-Dimensional Covariance Matrices.” *Journal of Multivariate
 Analysis*, **88**(2), 365–411.
 [doi:10.1016/S0047-259X(03)00096-4](https://doi.org/10.1016/S0047-259X%2803%2900096-4)
-.
+.  
+  
+Ledoit O, Wolf M (2022). “Quadratic Shrinkage for Large Covariance
+Matrices.” *Bernoulli*, **28**(3), 1519–1547.
+[doi:10.3150/20-BEJ1315](https://doi.org/10.3150/20-BEJ1315) .
 
 ## Examples
 
@@ -86,13 +69,16 @@ Analysis*, **88**(2), 365–411.
 set.seed(123)
 X <- matrix(rnorm(100), nrow = 20, ncol = 5)
 
-# Center X internally and use an effective sample size of N - 1
-Sigma_hat <- covLW(X)
+## Linear shrinkage; center X internally and use an effective sample size of N - 1
+Sigma_linear <- covLW(X)
 
-# X has already been centered as one class
+# Linear shrinkage; population mean is assumed to be known and equal to zero
+Sigma_linear_zeromean <- covLW(X, k = 0, method = "linear")
+
+## Linear-inverse shrinkage; internal centering
+Sigma_lis <- covLW(X, method = "lis")
+
+# Linear-inverse shrinkage; X has already been centered as one class
 X_centered <- scale(X, center = TRUE, scale = FALSE)
-Sigma_hat_centered <- covLW(X_centered, k = 1)
-
-# Population mean is assumed to be known and equal to zero
-Sigma_hat_zeromean <- covLW(X, k = 0)
+Sigma_lis_centered <- covLW(X_centered, k = 1, method = "lis")
 ```
